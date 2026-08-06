@@ -82,6 +82,12 @@ pub fn save_server_config(
         return Err("secret key 不能为空".into());
     }
 
+    // 规范化：确保 base_url 以 / 结尾，避免 Url::join 时丢失路径段
+    let mut server = server;
+    if !server.base_url.ends_with('/') {
+        server.base_url.push('/');
+    }
+
     config::save_user_server_config(&server)?;
     Ok(())
 }
