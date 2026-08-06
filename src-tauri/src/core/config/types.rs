@@ -2,10 +2,10 @@
 //!
 //! 定义了应用的所有配置结构体
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// 服务器配置
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ServerConfig {
     /// 服务器基础URL
     pub base_url: String,

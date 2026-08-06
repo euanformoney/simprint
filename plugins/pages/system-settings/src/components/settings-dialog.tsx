@@ -8,6 +8,7 @@ import { GeneralPanel } from './general-panel';
 import { BrowserPanel } from './browser-panel';
 import { NetworkPanel } from './network-panel';
 import { StoragePanel } from './storage-panel';
+import { ServerPanel } from './server-panel';
 import type { SettingsTab } from '../types';
 
 /**
@@ -34,6 +35,8 @@ export function SettingsDialog() {
         return <NetworkPanel />;
       case 'storage':
         return <StoragePanel />;
+      case 'server':
+        return <ServerPanel />;
       default:
         return null;
     }

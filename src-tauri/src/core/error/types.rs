@@ -452,6 +452,10 @@ pub enum Error {
     #[error("[190201] Config load failed: {0}")]
     ConfigLoadFailed(String),
 
+    /// 190202: Config save failed
+    #[error("[190202] Config save failed: {0}")]
+    ConfigSaveFailed(String),
+
     /// 190301: Config parse failed
     #[error("[190301] Config parse failed: {0}")]
     ConfigParseFailed(String),

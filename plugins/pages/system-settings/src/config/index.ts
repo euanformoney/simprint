@@ -1,4 +1,4 @@
-import { User, Settings, Fingerprint, Wifi, HardDrive, Sun, Moon, Monitor } from 'lucide-react';
+import { User, Settings, Fingerprint, Wifi, HardDrive, Sun, Moon, Monitor, Server } from 'lucide-react';
 import type { NavItem, ThemeOption, LanguageOption } from '../types';
 
 /**
@@ -11,6 +11,7 @@ export const getNavItems = (t: (key: string) => string): NavItem[] => [
   { id: 'browser', label: t('navBrowser'), icon: Fingerprint },
   { id: 'network', label: t('navNetwork'), icon: Wifi },
   { id: 'storage', label: t('navStorage'), icon: HardDrive },
+  { id: 'server', label: t('navServer'), icon: Server },
 ];
 
 /**
@@ -23,6 +24,7 @@ export const navItems: NavItem[] = [
   { id: 'browser', label: '浏览器与自动化', icon: Fingerprint },
   { id: 'network', label: '网络与同步', icon: Wifi },
   { id: 'storage', label: '存储与更新', icon: HardDrive },
+  { id: 'server', label: '服务器配置', icon: Server },
 ];
 
 /**

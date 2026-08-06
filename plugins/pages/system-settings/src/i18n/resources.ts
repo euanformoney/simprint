@@ -15,6 +15,7 @@ export const settingsResources = {
     navBrowser: '浏览器与自动化',
     navNetwork: '网络与同步',
     navStorage: '存储与更新',
+    navServer: '服务器配置',
 
     // Account Panel
     accountProfile: '个人资料',
@@ -222,6 +223,7 @@ export const settingsResources = {
     navBrowser: 'Browser & Automation',
     navNetwork: 'Network & Sync',
     navStorage: 'Storage & Update',
+    navServer: 'Server Config',
 
     // Account Panel
     accountProfile: 'Profile',

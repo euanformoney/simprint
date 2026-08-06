@@ -3,7 +3,13 @@ import type { ElementType } from 'react';
 /**
  * 设置页面导航标签类型
  */
-export type SettingsTab = 'account' | 'general' | 'browser' | 'network' | 'storage';
+export type SettingsTab =
+  | 'account'
+  | 'general'
+  | 'browser'
+  | 'network'
+  | 'storage'
+  | 'server';
 
 /**
  * 导航项配置

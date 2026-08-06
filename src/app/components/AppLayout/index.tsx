@@ -11,6 +11,8 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { I18nProvider } from '@/components/i18n-provider';
 import { commonResources } from '@/i18n/resources/common';
 import { Toaster } from '@/components/ui/sonner';
+import { ServerConfigWizard } from '@/components/server-config-wizard';
+import { invoke } from '@/lib/tauri';
 import { AppRoutes } from '../AppRoutes';
 import { SplashscreenRenderer } from '../SplashscreenRenderer';
 import { SyncerRenderer } from '../SyncerRenderer';
@@ -29,9 +31,27 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ mode = 'main' }) => {
   const [windowManagerComponent, setWindowManagerComponent] = useState<React.ComponentType | null>(
     null
   );
+  const [serverConfigChecked, setServerConfigChecked] = useState(false);
   const { initAuth, isAuthenticated } = useAuthStore();
   useDisableDevTools();
   const sessionLock = useSessionLock(mode === 'main');
+
+  // 检查服务器配置状态（仅在 main 模式下）
+  useEffect(() => {
+    if (mode === 'main') {
+      invoke<{ is_user_configured: boolean }>('get_server_config')
+        .then((cfg) => {
+          setServerConfigChecked(cfg.is_user_configured);
+        })
+        .catch((error) => {
+          console.error('[AppLayout] 读取服务器配置失败:', error);
+          // 读取失败时不阻塞，按已配置处理
+          setServerConfigChecked(true);
+        });
+    } else {
+      setServerConfigChecked(true);
+    }
+  }, [mode]);
 
   // 初始化认证状态（仅在 main 模式下）
   useEffect(() => {
@@ -77,6 +97,16 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ mode = 'main' }) => {
     return (
       <ThemeProvider defaultTheme="system" storageKey="simprint-ui-theme">
         <SyncerRenderer />
+      </ThemeProvider>
+    );
+  }
+
+  // 首次启动：未配置服务器时渲染配置向导，阻止进入主界面
+  if (mode === 'main' && !serverConfigChecked) {
+    return (
+      <ThemeProvider defaultTheme="system" storageKey="simprint-ui-theme">
+        <ServerConfigWizard />
+        <Toaster />
       </ThemeProvider>
     );
   }

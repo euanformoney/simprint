@@ -12,6 +12,7 @@ pub mod mihomo;
 pub mod network;
 pub mod rpa;
 pub mod security;
+pub mod server_config;
 pub mod store;
 pub mod updater;
 pub mod window;
@@ -131,5 +132,9 @@ pub fn register_handles() -> impl Fn(Invoke<tauri::Wry>) -> bool + Send + Sync +
         // Store commands
         store::get_store_key,
         store::set_store_key,
+        // Server config commands
+        server_config::get_server_config,
+        server_config::save_server_config,
+        server_config::test_server_connection,
     ]
 }
