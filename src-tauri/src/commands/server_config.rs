@@ -118,7 +118,7 @@ pub async fn test_server_connection(
     // 尝试多个接口，任一成功即连通
     let endpoints = [
         format!("{}/{}/time/now", base_url, version),
-        format!("{}/secret/public/key", base_url),
+        format!("{}/{}/secret/public/key", base_url, version),
     ];
 
     let mut last_error: Option<String> = None;
