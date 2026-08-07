@@ -179,7 +179,7 @@ export function ServerConfigWizard({ fullscreen = true, onSaved }: ServerConfigW
                   }}
                 />
                 <p className="text-xs text-muted-foreground">
-                  例如：https://browser.aisub2api.top/api/
+                  例如：https://your-server.com/api/
                 </p>
               </div>
 
