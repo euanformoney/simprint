@@ -32,6 +32,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ mode = 'main' }) => {
     null
   );
   const [serverConfigChecked, setServerConfigChecked] = useState(false);
+  const [serverConfigLoading, setServerConfigLoading] = useState(true);
   const { initAuth, isAuthenticated } = useAuthStore();
   useDisableDevTools();
   const sessionLock = useSessionLock(mode === 'main');
@@ -45,11 +46,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ mode = 'main' }) => {
         })
         .catch((error) => {
           console.error('[AppLayout] 读取服务器配置失败:', error);
-          // 读取失败时不阻塞，按已配置处理
-          setServerConfigChecked(true);
+          // 读取失败时也显示配置向导，让用户有机会手动配置
+          setServerConfigChecked(false);
+        })
+        .finally(() => {
+          setServerConfigLoading(false);
         });
     } else {
       setServerConfigChecked(true);
+      setServerConfigLoading(false);
     }
   }, [mode]);
 
@@ -99,6 +104,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ mode = 'main' }) => {
         <SyncerRenderer />
       </ThemeProvider>
     );
+  }
+
+  // 首次启动：配置状态加载中显示空白，避免闪烁
+  if (mode === 'main' && serverConfigLoading) {
+    return null;
   }
 
   // 首次启动：未配置服务器时渲染配置向导，阻止进入主界面
