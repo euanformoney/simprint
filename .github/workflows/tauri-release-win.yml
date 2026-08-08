@@ -36,6 +36,29 @@ jobs:
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Ensure AWS CLI
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          if (Get-Command aws -ErrorAction SilentlyContinue) {
+            aws --version
+            exit 0
+          }
+          $msiPath = Join-Path $env:RUNNER_TEMP "AWSCLIV2.msi"
+          Invoke-WebRequest "https://awscli.amazonaws.com/AWSCLIV2.msi" -OutFile $msiPath
+          Start-Process msiexec.exe -Wait -ArgumentList "/i `"$msiPath`" /qn"
+          @("C:\Program Files\Amazon\AWSCLIV2", "C:\Program Files\Amazon\AWSCLIV2\bin") | ForEach-Object {
+            if (Test-Path $_) { Add-Content -Path $env:GITHUB_PATH -Value $_ }
+          }
+          $awsExe = Get-Command aws -ErrorAction SilentlyContinue
+          if (-not $awsExe) {
+            $awsInstalled = Get-ChildItem "C:\Program Files\Amazon" -Filter aws.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $awsInstalled) { Write-Error "AWS CLI installation failed" }
+            & $awsInstalled.FullName --version
+            exit 0
+          }
+          aws --version
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -116,3 +139,50 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: node deploy/publish-github-release.mjs
+
+      - name: Publish version metadata to self-hosted console
+        env:
+          VERSION_API_URL: ${{ secrets.VERSION_API_URL }}
+          VERSION_API_KEY: ${{ secrets.VERSION_API_KEY }}
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
+          RELEASE_NOTES: ${{ github.event.head_commit.message }}
+        run: node deploy/publish-version.mjs
+
+      - name: Upload installer to R2 storage
+        shell: powershell
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $TAG = "${{ env.RELEASE_TAG }}"
+          $VERSION = $TAG.TrimStart('v')
+          $installer = Get-ChildItem "src-tauri/target/release/bundle/nsis" -Filter *.exe | Select-Object -First 1
+          if (-not $installer) { Write-Error "NSIS installer not found" }
+          $accountId = "${{ env.R2_ACCOUNT_ID }}"
+          $bucket = "${{ env.R2_BUCKET }}"
+          $endpoint = "https://${accountId}.r2.cloudflarestorage.com"
+          $env:AWS_ACCESS_KEY_ID = "${{ env.R2_ACCESS_KEY_ID }}"
+          $env:AWS_SECRET_ACCESS_KEY = "${{ env.R2_SECRET_ACCESS_KEY }}"
+          $env:AWS_EC2_METADATA_DISABLED = "true"
+          aws s3 cp $installer.FullName "s3://${bucket}/${VERSION}/simprint_setup.exe" --endpoint-url $endpoint --region auto
+
+      - name: Upload latest.json to R2 root
+        shell: powershell
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $accountId = "${{ env.R2_ACCOUNT_ID }}"
+          $bucket = "${{ env.R2_BUCKET }}"
+          $endpoint = "https://${accountId}.r2.cloudflarestorage.com"
+          $env:AWS_ACCESS_KEY_ID = "${{ env.R2_ACCESS_KEY_ID }}"
+          $env:AWS_SECRET_ACCESS_KEY = "${{ env.R2_SECRET_ACCESS_KEY }}"
+          $env:AWS_EC2_METADATA_DISABLED = "true"
+          aws s3 cp "latest.json" "s3://${bucket}/latest.json" --endpoint-url $endpoint --region auto
